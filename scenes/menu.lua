@@ -1,13 +1,11 @@
 local composer = require( "composer" )
-
 local scene = composer.newScene()
-
 -- import SONG_NAMES and SONG_NOTES variables 
 local songData = require( "globalData.songData" ) 
 
 local songOptionsArray = {}
 
-local subtitleText = 
+local subtitleTextProps = 
 {
     parent = sceneGroup, --FIXME: add group to add subtitle
     text = "select a song to play",     
@@ -18,7 +16,7 @@ local subtitleText =
     align = "center"
 }
 
-local songOptionText = 
+local songOptionTextProps = 
 {  
     parent = optionsGroup,
     text = "",  
@@ -36,7 +34,7 @@ function scene:create( event )
 
     display.setDefault( 'background', 0.1 )
 
-    subtitle = display.newText( subtitleText ) 
+    subtitle = display.newText( subtitleTextProps ) 
     --subtitle:setFillColor( 1, 0, 0 )
 
     local titleImage = display.newImage(sceneGroup, "images/logo.png" ) --FIXME: add group to add title image
@@ -51,13 +49,13 @@ function scene:show( event )
         local SPACING_BETWEEN_OPTIONS = 55
 
         local function drawOption (id, xPos, yPos)
-            local songOption = display.newText( songOptionText ) 
+            local songOptionText = display.newText( songOptionTextProps ) 
             --songOption:setFillColor( 1, 0, 0 )
-            songOption.x = xPos
-            songOption.y = yPos
-            songOption.text= SONG_NAMES[id]
-            songOption.number = id
-            table.insert(songOptionsArray, id, songOption)
+            songOptionText.x = xPos
+            songOptionText.y = yPos
+            songOptionText.text= SONG_NAMES[id]
+            songOptionText.number = id
+            table.insert(songOptionsArray, id, songOptionText)
         end
 
         local function drawMenu (xPos, yPos)
