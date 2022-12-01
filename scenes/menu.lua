@@ -5,14 +5,25 @@ local songData = require( "globalData.songData" )
 
 local songOptionsArray = {}
 
+local titleTextProps = 
+{
+    parent = sceneGroup, --FIXME: add group to add subtitle
+    text = "MAGIC KEYS",     
+    x = display.contentCenterX,
+    y = display.contentCenterY - 125,
+    font =  'fonts/AlegreyaSans-Black.ttf',
+    fontSize = 33,
+    align = "center"
+}
+
 local subtitleTextProps = 
 {
     parent = sceneGroup, --FIXME: add group to add subtitle
     text = "select a song to play",     
     x = display.contentCenterX,
     y = display.contentCenterY - 60,
-    font = native.systemFont,
-    fontSize = 17,
+    font =  'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+    fontSize = 25,
     align = "center"
 }
 
@@ -20,8 +31,8 @@ local songOptionTextProps =
 {  
     parent = optionsGroup,
     text = "",  
-    font = native.systemFontBold,   
-    fontSize = 20,
+    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',   
+    fontSize = 30,
     align = "center" 
 }
 
@@ -34,11 +45,11 @@ function scene:create( event )
 
     display.setDefault( 'background', 0.1 )
 
-    subtitle = display.newText( subtitleTextProps ) 
-    --subtitle:setFillColor( 1, 0, 0 )
+    title = display.newText( titleTextProps ) 
+    title:setFillColor( 0.7, 0.5, 1 )
 
-    local titleImage = display.newImage(sceneGroup, "images/logo.png" ) --FIXME: add group to add title image
-    titleImage:translate( display.contentCenterX, display.contentCenterY - 130 )
+    subtitle = display.newText( subtitleTextProps ) 
+    subtitle:setFillColor( 0.7, 1, 0.6 )
 end
  
 function scene:show( event )
@@ -60,7 +71,7 @@ function scene:show( event )
 
         local function drawMenu (xPos, yPos)
             local xPos = display.contentCenterX 
-            local yPos = display.contentCenterY - 10
+            local yPos = display.contentCenterY 
 
             for count = 1, #SONG_NAMES, 1 do
                 drawOption(count, xPos, yPos)
@@ -73,7 +84,7 @@ function scene:show( event )
     elseif ( phase == "did" ) then
         local function onOptionTouch(event) 
             if event.phase == "began" then
-                composer.gotoScene( 'scenes.game', { time=1000, effects="crossFade", params={ songId=event.target.number }})
+                composer.gotoScene( 'scenes.game', { params = { songId = event.target.number } } )
             end
         end
         
@@ -98,6 +109,8 @@ end
  
 function scene:destroy( event )
     local sceneGroup = self.view
+    title:removeSelf()
+    title = nil
     subtitle:removeSelf()
     subtitle = nil
     for index, songOption in ipairs(songOptionsArray) do

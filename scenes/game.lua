@@ -8,40 +8,45 @@ local songData = require( "globalData.songData" )
 local keysArray = {}
 local KEY_COLORS = {{0.9, 0.2, 0.2}, {1, 0.5, 0}, {1, 0.9, 0.2}, {0.7, 0.9, 0.4}, {0.5, 0.9, 0.9}, {0.3, 0.3, 0.8}, {0.4, 0.2, 0.7}, {1, 0.5, 0.7}}
 
+local keyIndex = 0
+local demo = true
+
 local function onDemoButtonRelease (event) --FIXME: should this be here 
-    demoButton:removeSelf()
-    startButton = widget.newButton( startButtonProps )
+    transition.fadeOut( demoButton, { time = 400 } )
     playDemo()
 end 
 
 local function onStartButtonRelease (event) --FIXME: should this be here 
-    startButton:removeSelf()
-    composer.hideOverlay( "fade", 400 )
+    transition.fadeOut( startButton, { time = 400 } )
+    keyIndex = 0 --FIXME: use better name
+    demo = false 
+    composer.hideOverlay()
 end 
 
 demoButtonProps = 
 {
     parent = sceneGroup, --FIXME: add new group for song title    
     x = display.contentCenterX,
-    y = display.contentCenterY - 30,
+    y = display.contentCenterY - 60 ,
     label = "Play Demo", --FIXME: add play icon
     labelAlign = "center",
-    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-    font = native.systemFont,
-    fontSize = 20,
+    labelColor = { default = { 1, 1, 1 } },
+    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+    fontSize = 50,
     onRelease = onDemoButtonRelease
 }
 
 startButtonProps = 
 {
-    parent = sceneGroup, --FIXME: add new group for song title    
+    parent = sceneGroup, --FIXME: add new group for song title and THESE PROPS ARE REPETITION
     x = display.contentCenterX,
-    y = display.contentCenterY - 30,
+    y = display.contentCenterY - 60,
     label = "Start Game", 
     labelAlign = "center",
-    labelColor = { default={ 1, 1, 1 }, over={ 0, 0, 0, 0.5 } },
-    font = native.systemFont,
-    fontSize = 20,
+    labelColor = { default = { 1, 1, 1 }},
+    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+    fontSize = 50,
+    alpha = 0,
     onRelease = onStartButtonRelease
 }
 
@@ -51,14 +56,14 @@ local songTitleTextProps =
     text = "",     
     x = display.contentCenterX,
     y = display.contentCenterY - 130,
-    font = native.systemFontBold,
-    fontSize = 22,
+    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+    fontSize = 30,
     align = "center"
 }
 
 function scene:create( event )
     local sceneGroup = self.view
-    local params = event.params
+    songId = event.params.songId
 
     keysGroup = display.newGroup()
 
@@ -69,9 +74,10 @@ function scene:create( event )
     composer.showOverlay( "scenes.demo", { isModal = true } )
 
     songTitle = display.newText( songTitleTextProps ) 
-    songTitle.text = SONG_NAMES[params.songId]
+    songTitle.text = SONG_NAMES[songId]
 
-    songNotes = SONG_NOTES[params.songId]
+    songNotes = SONG_NOTES[songId]
+
 end
  
 function scene:show( event )
@@ -86,7 +92,7 @@ function scene:show( event )
         local PIANO_WIDTH = (KEY_WIDTH + SPACING_BETWEEN_KEYS) * NUM_OF_KEYS
 
         local function drawKey (keyId, xPos, yPos)
-            key = display.newRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT)
+            key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 12)
             key.fill = KEY_COLORS[keyId]
             key.number = keyId
             table.insert(keysArray, keyId, key)
@@ -114,6 +120,7 @@ function scene:show( event )
 
         local function onKeyTouch(event) 
             if event.phase == "began" then
+                compareKeys(event.target.number)
                 event.target.alpha = 0.5  
                 local effectTimer = timer.performWithDelay( 250, afterKeyTouch )
                 effectTimer.params = { keyTouchEvent = event }
@@ -129,12 +136,34 @@ function scene:show( event )
             onKeyTouch({phase = "began", name = "touch", target = keysArray[params.key]})
         end
 
+        local function createStartButton ()
+            startButton = widget.newButton( startButtonProps )
+        end
+        
         function playDemo ()
-            local delay = 0;
+            delay = 0;
             for index, keyNumber in ipairs(songNotes) do
                 delay = delay + 500
                 local delayBetweenNotes = timer.performWithDelay( delay, pressKey )
                 delayBetweenNotes.params = { key = keyNumber }
+            end
+            
+            timer.performWithDelay( 500 * #songNotes, createStartButton )
+        end
+
+        function endGame (event)
+            local params = event.source.params
+            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result } })
+        end
+
+        function compareKeys (keyPressed)
+            keyIndex = keyIndex + 1
+            if (keyPressed ~= songNotes[keyIndex]) then
+                delayExit = timer.performWithDelay (500, endGame)
+                delayExit.params = { result = 'fail' }
+            elseif (keyIndex == #songNotes and demo == false) then
+                delayExit = timer.performWithDelay (500, endGame)
+                delayExit.params = { result = 'pass' }
             end
         end
 
@@ -149,13 +178,14 @@ function scene:hide( event )
         print ('game will hide')
  
     elseif ( phase == "did" ) then
-        print ('game did hide')
+        composer.removeScene( "scenes.game")
     end
 end
  
 function scene:destroy( event )
     local sceneGroup = self.view
-    print ('game destroy')
+    songTitle:removeSelf()
+    songTitle = nil
 end
 
 scene:addEventListener( "create", scene )
