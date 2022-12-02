@@ -27,7 +27,6 @@ end
 
 local demoButtonProps = 
 {
-    parent = buttonsGroup,
     x = display.contentCenterX,
     y = display.contentCenterY - 60 ,
     label = "Play Demo", 
@@ -40,7 +39,6 @@ local demoButtonProps =
 
 local startButtonProps = 
 {
-    parent = buttonsGroup, 
     x = display.contentCenterX,
     y = display.contentCenterY - 60,
     label = "Start Game", 
@@ -53,7 +51,6 @@ local startButtonProps =
 
 local songTitleTextProps = 
 {
-    parent = staticGroup, 
     text = "",     
     x = display.contentCenterX,
     y = display.contentCenterY - 130,
@@ -64,12 +61,8 @@ local songTitleTextProps =
 
 function scene:create( event )
     local sceneGroup = self.view
-    staticGroup = display.newGroup()
     keysGroup = display.newGroup()
-    buttonsGroup = display.newGroup()
 
-    sceneGroup:insert(staticGroup) 
-    sceneGroup:insert(buttonsGroup) 
     sceneGroup:insert(keysGroup) 
 
     songId = event.params.songId

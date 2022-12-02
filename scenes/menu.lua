@@ -8,7 +8,6 @@ local songOptionsArray = {}
 
 local titleTextProps = 
 {
-    parent = staticGroup, 
     text = "MAGIC KEYS",     
     x = display.contentCenterX,
     y = display.contentCenterY - 125,
@@ -19,7 +18,6 @@ local titleTextProps =
 
 local subtitleTextProps = 
 {
-    parent = staticGroup, 
     text = "select a song to play",     
     x = display.contentCenterX,
     y = display.contentCenterY - 60,
@@ -30,7 +28,6 @@ local subtitleTextProps =
 
 local songOptionTextProps = 
 {  
-    parent = optionsGroup,
     text = "",  
     font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',   
     fontSize = 30,
@@ -39,11 +36,6 @@ local songOptionTextProps =
 
 function scene:create( event )
     local sceneGroup = self.view
-    local staticGroup = display.newGroup() 
-    local optionsGroup = display.newGroup() 
-
-    sceneGroup:insert(staticGroup) 
-    sceneGroup:insert(optionsGroup) 
 
     display.setDefault( 'background', 0.1 )
 end
@@ -58,7 +50,7 @@ function scene:show( event )
 
         subtitle = display.newText( subtitleTextProps ) 
         subtitle:setFillColor( 0.7, 1, 0.6 )
-        
+
         local SPACING_BETWEEN_OPTIONS = 55
 
         local function drawOption (id, xPos, yPos)

@@ -3,17 +3,16 @@ local widget = require( "widget" )
 
 local scene = composer.newScene()
 
-local function onMenuButtonRelease ( event ) 
+local function onMenuButtonRelease (event) 
     composer.gotoScene( 'scenes.menu' )
 end 
 
-local function onRetryButtonRelease ( event ) 
+local function onRetryButtonRelease (event) 
     composer.gotoScene( 'scenes.game', { params = { songId = songId } } )
 end 
 
 menuButtonProps = 
 {
-    parent = buttonsGroup, 
     x = display.contentCenterX + 100,
     y = display.contentCenterY + 40,
     label = "Go to Menu", 
@@ -26,12 +25,11 @@ menuButtonProps =
 
 retryButtonProps = 
 {
-    parent = buttonsGroup, 
     x = display.contentCenterX - 100,
     y = display.contentCenterY + 40,
     label = "Play Again", 
     labelAlign = "center",
-    labelColor = { default = { 1, 1, 1 } },
+    labelColor = { default={ 1, 1, 1 } },
     font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
     fontSize = 35,
     onRelease = onRetryButtonRelease
@@ -39,7 +37,6 @@ retryButtonProps =
 
 local resultTextProps = 
 {
-    parent = staticGroup, 
     text = "",     
     x = display.contentCenterX,
     y = display.contentCenterY - 60,
@@ -50,24 +47,20 @@ local resultTextProps =
 
 function scene:create( event )
     local sceneGroup = self.view
-    local staticGroup = display.newGroup() 
-    local buttonsGroup = display.newGroup() 
-
-    sceneGroup:insert(staticGroup) 
-    sceneGroup:insert(buttonsGroup) 
 
     songId = event.params.songId
     result = event.params.result
 end
- 
+
 function scene:show( event )
     local sceneGroup = self.view
     local phase = event.phase
- 
+
     if ( phase == "will" ) then
+
         menuButton = widget.newButton( menuButtonProps )
         retryButton = widget.newButton( retryButtonProps )
-        
+
         resultText = display.newText( resultTextProps ) 
 
         if (result == 'pass') then
@@ -79,21 +72,21 @@ function scene:show( event )
         end
 
     elseif ( phase == "did" ) then
-
+        
     end
 end
- 
+
 function scene:hide( event )
     local sceneGroup = self.view
     local phase = event.phase
- 
+
     if ( phase == "will" ) then
 
     elseif ( phase == "did" ) then
-        composer.removeScene( "scenes.review")
+        composer.removeScene( "scenes.review" )
     end
 end
- 
+
 function scene:destroy( event )
     local sceneGroup = self.view
 
@@ -106,10 +99,10 @@ function scene:destroy( event )
     resultText:removeSelf()
     resultText = nil
 end
- 
+
 scene:addEventListener( "create", scene )
 scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
- 
+
 return scene
