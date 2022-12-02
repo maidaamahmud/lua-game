@@ -1,13 +1,14 @@
 local composer = require( "composer" )
-local scene = composer.newScene()
 -- import SONG_NAMES and SONG_NOTES variables 
 local songData = require( "globalData.songData" ) 
+
+local scene = composer.newScene()
 
 local songOptionsArray = {}
 
 local titleTextProps = 
 {
-    parent = sceneGroup, --FIXME: add group to add subtitle
+    parent = staticGroup, 
     text = "MAGIC KEYS",     
     x = display.contentCenterX,
     y = display.contentCenterY - 125,
@@ -18,7 +19,7 @@ local titleTextProps =
 
 local subtitleTextProps = 
 {
-    parent = sceneGroup, --FIXME: add group to add subtitle
+    parent = staticGroup, 
     text = "select a song to play",     
     x = display.contentCenterX,
     y = display.contentCenterY - 60,
@@ -38,18 +39,13 @@ local songOptionTextProps =
 
 function scene:create( event )
     local sceneGroup = self.view
-
+    local staticGroup = display.newGroup() 
     local optionsGroup = display.newGroup() 
 
+    sceneGroup:insert(staticGroup) 
     sceneGroup:insert(optionsGroup) 
 
     display.setDefault( 'background', 0.1 )
-
-    title = display.newText( titleTextProps ) 
-    title:setFillColor( 0.7, 0.5, 1 )
-
-    subtitle = display.newText( subtitleTextProps ) 
-    subtitle:setFillColor( 0.7, 1, 0.6 )
 end
  
 function scene:show( event )
@@ -57,11 +53,16 @@ function scene:show( event )
     local phase = event.phase
     
     if ( phase == "will" ) then
+        title = display.newText( titleTextProps ) 
+        title:setFillColor( 0.7, 0.5, 1 )
+
+        subtitle = display.newText( subtitleTextProps ) 
+        subtitle:setFillColor( 0.7, 1, 0.6 )
+        
         local SPACING_BETWEEN_OPTIONS = 55
 
         local function drawOption (id, xPos, yPos)
             local songOptionText = display.newText( songOptionTextProps ) 
-            --songOption:setFillColor( 1, 0, 0 )
             songOptionText.x = xPos
             songOptionText.y = yPos
             songOptionText.text= SONG_NAMES[id]
@@ -99,22 +100,23 @@ function scene:hide( event )
     local phase = event.phase
  
     if ( phase == "will" ) then
-        print ('menu will hide')
- 
+
     elseif ( phase == "did" ) then
-        print ('menu did hide')
-        composer.removeScene( "scenes.menu") -- FIXME: should menu scene be recycled?
+        composer.removeScene( "scenes.menu") 
     end
 end
  
 function scene:destroy( event )
     local sceneGroup = self.view
+
     title:removeSelf()
     title = nil
+
     subtitle:removeSelf()
     subtitle = nil
+
     for index, songOption in ipairs(songOptionsArray) do
-        songOption:removeSelf() --FIXME: do by removing optionsGroup instead 
+        songOption:removeSelf() 
         songOption = nil
     end
 end
