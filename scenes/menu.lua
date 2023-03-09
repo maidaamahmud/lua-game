@@ -77,7 +77,7 @@ function scene:show( event )
     elseif ( phase == "did" ) then
         local function onOptionTouch(event) 
             if event.phase == "began" then
-                composer.gotoScene( 'scenes.game', { params = { songId = event.target.number } } )
+                composer.gotoScene( 'scenes.game', { params = { songId = event.target.number, level = 1 } } )
             end
         end
         

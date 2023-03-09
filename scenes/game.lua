@@ -10,54 +10,10 @@ local KEY_COLORS = {{0.9, 0.2, 0.2}, {1, 0.5, 0}, {1, 0.9, 0.2}, {0.7, 0.9, 0.4}
 
 local keysArray = {} -- array to store all the keys created in order 
 
-local keyIndex = 0 -- the index of the key in the songNotes array ( eg. second key pressed in song )
-local demo = true 
+local userKeyIndex = 0 -- the index of the key in the songNotes array (key index is incremented after user presses key)
+local paceKeyIndex = 0 -- moniters user's pace (key index is set to what it should be according to song pace)
 
-local function onDemoButtonRelease (event) 
-    transition.fadeOut( demoButton, { time = 400 } )
-    playDemo()
-end 
-
-local function onStartButtonRelease (event) 
-    transition.fadeOut( startButton, { time = 400 } )
-    keyIndex = 0 -- sets back to 0 once the demo is over and the game begins 
-    demo = false 
-    composer.hideOverlay() -- hiding overlay means user can interact with the piano 
-end 
-
-local demoButtonProps = 
-{
-    x = display.contentCenterX,
-    y = display.contentCenterY - 60 ,
-    label = "Play Demo", 
-    labelAlign = "center",
-    labelColor = { default = { 1, 1, 1 } },
-    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 50,
-    onRelease = onDemoButtonRelease
-}
-
-local startButtonProps = 
-{
-    x = display.contentCenterX,
-    y = display.contentCenterY - 60,
-    label = "Start Game", 
-    labelAlign = "center",
-    labelColor = { default = { 1, 1, 1 } },
-    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 50,
-    onRelease = onStartButtonRelease
-}
-
-local songTitleTextProps = 
-{
-    text = "",     
-    x = display.contentCenterX,
-    y = display.contentCenterY - 130,
-    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 30,
-    align = "center"
-}
+local gameInProgress = false
 
 function scene:create( event )
     local sceneGroup = self.view
@@ -68,6 +24,20 @@ function scene:create( event )
     songId = event.params.songId
     songNotes = SONG_NOTES[ songId ]
 
+    level = event.params.level
+    if level == 1 then
+        tempo = 1250
+        print("level 1")
+    elseif level == 2 then
+        tempo = 1000
+        print("level 2")
+    elseif level == 3 then
+        tempo = 750
+        print("level 3")
+    else 
+        tempo = 500
+    end
+     
     display.setDefault( 'background', 0.1 )
 
     composer.showOverlay( "scenes.demo", { isModal = true } ) -- overlay prevents user from interacting with piano keys
@@ -77,12 +47,43 @@ end
 function scene:show( event )
     local sceneGroup = self.view
     local phase = event.phase
+
+    local function onDemoButtonRelease (event) 
+        transition.fadeOut( demoButton, { time = 400 } )
+        playDemo()
+    end 
+
  
     if ( phase == "will" ) then
-        songTitle = display.newText( songTitleTextProps ) 
+        songTitle = display.newText({
+            text = "",     
+            x = display.contentCenterX,
+            y = display.contentCenterY - 130,
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 30,
+            align = "center"
+        }) 
         songTitle.text = SONG_NAMES[songId]
 
-        demoButton = widget.newButton( demoButtonProps )
+        pressText = display.newText({
+            x = display.contentCenterX,
+            y = display.contentCenterY - 60,
+            text = "PRESS",
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 50,
+        }) 
+        pressText.alpha = 0
+
+        demoButton = widget.newButton({
+            x = display.contentCenterX,
+            y = display.contentCenterY - 60 ,
+            label = "Play Demo", 
+            labelAlign = "center",
+            labelColor = { default = { 1, 1, 1 } },
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 50,
+            onRelease = onDemoButtonRelease
+        })
 
         local KEY_WIDTH = 65
         local KEY_HEIGHT = 140
@@ -109,16 +110,16 @@ function scene:show( event )
         drawPiano()
  
     elseif ( phase == "did" ) then
-        local function afterKeyTouch( event )
+        local function afterKeyTouch( event ) -- key press transition 
             local params = event.source.params
             params.keyTouchEvent.target.alpha = 1
         end
 
-        local function onKeyTouch( event ) 
+        local function onKeyTouch( event ) -- used for demo (to imitate press) and used when user presses key
             if event.phase == "began" then
-                compareKeys( event.target.number )
-                event.target.alpha = 0.5  
-                local effectTimer = timer.performWithDelay( 250, afterKeyTouch )
+                compareKeys( event.target.number ) -- when key is pressed, it is checked to see if correct one was pressed
+                event.target.alpha = 0.5 
+                local effectTimer = timer.performWithDelay( 250, afterKeyTouch )  -- runs key press transition 
                 effectTimer.params = { keyTouchEvent = event } 
             end
         end
@@ -127,39 +128,74 @@ function scene:show( event )
             key:addEventListener("touch", onKeyTouch) -- add touch event listner to each piano key 
         end
 
+        local function onSongBeat (onDelay)
+            delay = 0;
+            for index, keyNumber in ipairs(songNotes) do
+                delay = delay + tempo 
+                local delayBetweenNotes = timer.performWithDelay( delay, onDelay ) 
+                delayBetweenNotes.params = { key = keyNumber }
+            end
+        end
+
         local function imitatePressKey(event) -- imitates touch event without user interaction ( for demo )
             local params = event.source.params
             onKeyTouch({phase = "began", name = "touch", target = keysArray[params.key]})
         end
 
+        local function pulsatePressButton ()
+            paceKeyIndex = paceKeyIndex + 1
+
+            transition.to( pressText, { time=tempo/3, alpha=1, onComplete=function()
+            transition.to( pressText, { time=tempo/3, alpha=0 } )
+            end } )
+        end
+
+        local function onStartButtonRelease (event) 
+            transition.fadeOut( startButton, { time = 400 } )
+            userKeyIndex = 0 -- sets back to 0 once the demo is over and the game begins 
+            gameInProgress = true
+            composer.hideOverlay() -- hiding overlay means user can interact with the piano 
+ 
+            onSongBeat(pulsatePressButton)
+        end 
+
         local function createStartButton ()
-            startButton = widget.newButton( startButtonProps )
+            startButton = widget.newButton({
+                x = display.contentCenterX,
+                y = display.contentCenterY - 60,
+                label = "Start Game", 
+                labelAlign = "center",
+                labelColor = { default = { 1, 1, 1 } },
+                font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+                fontSize = 50,
+                onRelease = onStartButtonRelease
+            })
         end
         
         function playDemo ()
-            delay = 0;
-            for index, keyNumber in ipairs(songNotes) do
-                delay = delay + 500
-                local delayBetweenNotes = timer.performWithDelay( delay, imitatePressKey ) 
-                delayBetweenNotes.params = { key = keyNumber }
-            end
-            
-            timer.performWithDelay( 500 * #songNotes, createStartButton ) -- after demo start game button appears on screen
+            onSongBeat(imitatePressKey)  
+            timer.performWithDelay( tempo * #songNotes, createStartButton ) -- after demo ended, runs function to render start button
         end
  
-        function onGameOver (event) -- takes user to review screen after game over
+        function onEndLevel (event) -- takes user to review screen after game over
             local params = event.source.params
-            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result } } ) 
+            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result, level = level, description = params.description} } ) 
         end
 
         function compareKeys (keyPressed) -- Compares the keyId of key pressed by user with the keyId in the same index ( using keyIndex defined above ) in the songNotes array 
-            keyIndex = keyIndex + 1 -- everytime a key is pressed the key index is incremented
-            if (keyPressed ~= songNotes[keyIndex]) then
-                delayExit = timer.performWithDelay (500, onGameOver)
-                delayExit.params = { result = 'fail' }
-            elseif (keyIndex == #songNotes and demo == false) then 
-                delayExit = timer.performWithDelay (500, onGameOver)
-                delayExit.params = { result = 'pass' }
+            userKeyIndex = userKeyIndex + 1 -- everytime a key is pressed the key index is incremented
+            if (userKeyIndex ~= paceKeyIndex and gameInProgress) then
+                level = 1
+                delayExit = timer.performWithDelay (500, onEndLevel)
+                delayExit.params = { result = 'fail', description = 'YOU WERE OFF BEAT'}
+            elseif (keyPressed ~= songNotes[userKeyIndex] ) then
+                level = 1
+                delayExit = timer.performWithDelay (500, onEndLevel)
+                delayExit.params = { result = 'fail', description = 'YOU PLAYED THE WRONG NOTE'}
+            elseif (userKeyIndex == #songNotes and gameInProgress) then 
+                delayExit = timer.performWithDelay (500, onEndLevel)
+                delayExit.params = { result = 'pass', description = 'YOU COMPLETED LEVEL '.. level}
+                level = level + 1
             end
         end
 
@@ -182,6 +218,11 @@ function scene:destroy( event )
 
     songTitle:removeSelf()
     songTitle = nil
+
+    pressText:removeSelf()
+    pressText = nil
+
+
 end
 
 scene:addEventListener( "create", scene )

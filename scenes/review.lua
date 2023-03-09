@@ -3,53 +3,13 @@ local widget = require( "widget" )
 
 local scene = composer.newScene()
 
-local function onMenuButtonRelease (event) 
-    composer.gotoScene( 'scenes.menu' )
-end 
-
-local function onRetryButtonRelease (event) 
-    composer.gotoScene( 'scenes.game', { params = { songId = songId } } )
-end 
-
-menuButtonProps = 
-{
-    x = display.contentCenterX + 100,
-    y = display.contentCenterY + 40,
-    label = "Go to Menu", 
-    labelAlign = "center",
-    labelColor = { default={ 1, 1, 1 } },
-    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 35,
-    onRelease = onMenuButtonRelease
-}
-
-retryButtonProps = 
-{
-    x = display.contentCenterX - 100,
-    y = display.contentCenterY + 40,
-    label = "Play Again", 
-    labelAlign = "center",
-    labelColor = { default={ 1, 1, 1 } },
-    font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 35,
-    onRelease = onRetryButtonRelease
-}
-
-local resultTextProps = 
-{
-    text = "",     
-    x = display.contentCenterX,
-    y = display.contentCenterY - 60,
-    font =  'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-    fontSize = 50,
-    align = "center"
-}
-
 function scene:create( event )
     local sceneGroup = self.view
-
-    songId = event.params.songId
-    result = event.params.result
+    local params = event.params
+    songId = params.songId
+    result = params.result
+    level = params.level
+    description = params.description
 end
 
 function scene:show( event )
@@ -58,17 +18,62 @@ function scene:show( event )
 
     if ( phase == "will" ) then
 
-        menuButton = widget.newButton( menuButtonProps )
-        retryButton = widget.newButton( retryButtonProps )
+        local function onMenuButtonRelease () 
+            composer.gotoScene( 'scenes.menu' )
+        end 
 
-        resultText = display.newText( resultTextProps ) 
+        local function onGameButtonRelease () 
+            composer.gotoScene( 'scenes.game', { params = { songId = songId, level = level} } )
+        end 
+
+        menuButton = widget.newButton({
+            x = display.contentCenterX - 100,
+            y = display.contentCenterY + 40,
+            label = "Go to Menu", 
+            labelAlign = "center",
+            labelColor = { default={ 1, 1, 1 } },
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 35,
+            onRelease = onMenuButtonRelease
+        })
+
+        gameButton = widget.newButton({
+            x = display.contentCenterX + 100,
+            y = display.contentCenterY + 40,
+            label = "", 
+            labelAlign = "center",
+            labelColor = { default={ 1, 1, 1 } },
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 35,
+            onRelease = onGameButtonRelease
+        })
+
+        resultText = display.newText({
+            text = "",     
+            x = display.contentCenterX,
+            y = display.contentCenterY - 60,
+            font =  'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 50,
+            align = "center"
+        }) 
+
+        descriptionText = display.newText({
+            text = description,     
+            x = display.contentCenterX,
+            y = display.contentCenterY - 20 , 
+            font = 'fonts/GroupeMedium-8MXgn.otf',
+            fontSize = 20,
+            align = "center"
+        }) 
 
         if (result == 'pass') then
             resultText.text = "PASSED"
             resultText:setFillColor( 0.7, 1, 0.6 )
-        else
+            gameButton:setLabel("Next Level")
+        else 
             resultText.text = "FAILED"   
             resultText:setFillColor( 1, 0.4, 0.4 )
+            gameButton:setLabel("Try Again")
         end
 
     elseif ( phase == "did" ) then
@@ -93,11 +98,14 @@ function scene:destroy( event )
     menuButton:removeSelf()
     menuButton = nil
 
-    retryButton:removeSelf()
-    retryButton = nil
+    gameButton:removeSelf()
+    gxameButton = nil
 
     resultText:removeSelf()
     resultText = nil
+
+    descriptionText:removeSelf()
+    descriptionText = nil
 end
 
 scene:addEventListener( "create", scene )
