@@ -2,7 +2,7 @@
 local composer = require( "composer" )
 local widget = require( "widget" )
 -- import SONG_NAMES and SONG_NOTES variables 
-local songData = require( "globalData.songData" ) 
+local songData = require( "global.songData" ) 
 
 local scene = composer.newScene()
  
@@ -26,16 +26,20 @@ function scene:create( event )
 
     level = event.params.level
     if level == 1 then
-        tempo = 1250
+        tempo = 1600
         print("level 1")
     elseif level == 2 then
-        tempo = 1000
+        tempo = 1350
         print("level 2")
     elseif level == 3 then
-        tempo = 750
+        tempo = 1100
         print("level 3")
-    else 
-        tempo = 500
+    elseif level == 4 then
+        tempo = 850
+        print("level 4")
+    elseif level == 5 then
+        tempo = 600
+        print ("level 5")
     end
      
     display.setDefault( 'background', 0.1 )
@@ -47,43 +51,35 @@ end
 function scene:show( event )
     local sceneGroup = self.view
     local phase = event.phase
-
-    local function onDemoButtonRelease (event) 
-        transition.fadeOut( demoButton, { time = 400 } )
-        playDemo()
-    end 
-
  
     if ( phase == "will" ) then
-        songTitle = display.newText({
-            text = "",     
+        print(level)
+        levelText = display.newText({
+            text = "LEVEL " .. level,     
             x = display.contentCenterX,
-            y = display.contentCenterY - 130,
-            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-            fontSize = 30,
+            y = display.contentCenterY - 150,
+            font = 'fonts/GroupeMedium-8MXgn.otf',
+            fontSize = 15,
             align = "center"
         }) 
-        songTitle.text = SONG_NAMES[songId]
+
+        songTitle = display.newText({
+            text = SONG_NAMES[songId],     
+            x = display.contentCenterX,
+            y = display.contentCenterY - 115,
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 35,
+            align = "center"
+        }) 
 
         pressText = display.newText({
             x = display.contentCenterX,
             y = display.contentCenterY - 60,
             text = "PRESS",
-            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-            fontSize = 50,
+            font = 'fonts/GroupeMedium-8MXgn.otf',
+            fontSize = 40,
         }) 
         pressText.alpha = 0
-
-        demoButton = widget.newButton({
-            x = display.contentCenterX,
-            y = display.contentCenterY - 60 ,
-            label = "Play Demo", 
-            labelAlign = "center",
-            labelColor = { default = { 1, 1, 1 } },
-            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-            fontSize = 50,
-            onRelease = onDemoButtonRelease
-        })
 
         local KEY_WIDTH = 65
         local KEY_HEIGHT = 140
@@ -101,7 +97,7 @@ function scene:show( event )
         local function drawPiano ()
         local xPos = display.contentCenterX - ( PIANO_WIDTH / 2 - (KEY_WIDTH + SPACING_BETWEEN_KEYS) / 2 )
         local yPos = display.contentCenterY + 70
-            for count = 1, NUM_OF_KEYS, 1 do
+            for count = 1, NUM_OF_KEYS do
                 drawKey( count, xPos, yPos )
                 xPos = xPos + KEY_WIDTH + SPACING_BETWEEN_KEYS
             end
@@ -127,6 +123,22 @@ function scene:show( event )
         for index, key in ipairs(keysArray) do
             key:addEventListener("touch", onKeyTouch) -- add touch event listner to each piano key 
         end
+
+        local function onDemoButtonRelease (event) 
+            transition.fadeOut( demoButton, { time = 400 } )
+            playDemo()
+        end 
+
+        demoButton = widget.newButton({
+            x = display.contentCenterX,
+            y = display.contentCenterY - 60,
+            label = "PLAY DEMO", 
+            labelAlign = "center",
+            labelColor = { default = { 1, 1, 1 } },
+            font = 'fonts/GroupeMedium-8MXgn.otf',
+            fontSize = 40,
+            onRelease = onDemoButtonRelease
+        })
 
         local function onSongBeat (onDelay)
             delay = 0;
@@ -163,11 +175,11 @@ function scene:show( event )
             startButton = widget.newButton({
                 x = display.contentCenterX,
                 y = display.contentCenterY - 60,
-                label = "Start Game", 
+                label = "START GAME", 
                 labelAlign = "center",
                 labelColor = { default = { 1, 1, 1 } },
-                font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-                fontSize = 50,
+                font = 'fonts/GroupeMedium-8MXgn.otf',
+                fontSize = 40,
                 onRelease = onStartButtonRelease
             })
         end
@@ -179,23 +191,29 @@ function scene:show( event )
  
         function onEndLevel (event) -- takes user to review screen after game over
             local params = event.source.params
-            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result, level = level, description = params.description} } ) 
+            print("hm", completedLevel)
+            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result, currentLevel = level, nextLevel = params.nextLevel, description = params.description} } ) 
         end
 
         function compareKeys (keyPressed) -- Compares the keyId of key pressed by user with the keyId in the same index ( using keyIndex defined above ) in the songNotes array 
             userKeyIndex = userKeyIndex + 1 -- everytime a key is pressed the key index is incremented
             if (userKeyIndex ~= paceKeyIndex and gameInProgress) then
-                level = 1
                 delayExit = timer.performWithDelay (500, onEndLevel)
-                delayExit.params = { result = 'fail', description = 'YOU WERE OFF BEAT'}
+                delayExit.params = { result = 'fail', description = 'OH NO, YOU WERE OFF BEAT', nextLevel = level}
             elseif (keyPressed ~= songNotes[userKeyIndex] ) then
-                level = 1
                 delayExit = timer.performWithDelay (500, onEndLevel)
-                delayExit.params = { result = 'fail', description = 'YOU PLAYED THE WRONG NOTE'}
+                delayExit.params = { result = 'fail', description = 'OH NO, YOU PLAYED THE WRONG NOTE', nextLevel = level}
             elseif (userKeyIndex == #songNotes and gameInProgress) then 
+                if level < 5 then
+                    description = 'WELL DONE, NOW LETS MAKE IT FASTER'
+                    nextLevel = level + 1
+                else 
+                    description = 'YOU COMPLETED ALL THE LEVELS'
+                    nextLevel = 1
+                end
+
                 delayExit = timer.performWithDelay (500, onEndLevel)
-                delayExit.params = { result = 'pass', description = 'YOU COMPLETED LEVEL '.. level}
-                level = level + 1
+                delayExit.params = { result = 'pass', description = description, nextLevel = nextLevel}
             end
         end
 
@@ -222,7 +240,8 @@ function scene:destroy( event )
     pressText:removeSelf()
     pressText = nil
 
-
+    levelText:removeSelf()
+    levelText = nil
 end
 
 scene:addEventListener( "create", scene )

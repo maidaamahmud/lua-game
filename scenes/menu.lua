@@ -1,6 +1,6 @@
 local composer = require( "composer" )
 -- import SONG_NAMES and SONG_NOTES variables 
-local songData = require( "globalData.songData" ) 
+local songData = require( "global.songData" ) 
 
 local scene = composer.newScene()
 
@@ -20,7 +20,7 @@ local subtitleTextProps =
 {
     text = "select a song to play",     
     x = display.contentCenterX,
-    y = display.contentCenterY - 60,
+    y = display.contentCenterY - 50,
     font =  'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
     fontSize = 25,
     align = "center"
