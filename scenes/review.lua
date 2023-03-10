@@ -20,7 +20,7 @@ function scene:create( event )
     nextLevel = params.nextLevel
     completedLevel = nextLevel - 1
 
-    highScoresFile = system.pathForFile("highscores.json", system.DocumentsDirectory)
+    
 end
 
 function scene:show( event )
