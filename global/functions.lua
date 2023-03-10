@@ -1,4 +1,6 @@
-function drawStar(group, x, y, size)
+local json = require("json")
+
+function drawStar(group, x, y, size, style)
   -- this function is not my own code, however was slightly modified by me
   local halfSize = size / 2
   local angle = math.pi / 5
@@ -12,6 +14,21 @@ function drawStar(group, x, y, size)
   end
 
   local star = display.newPolygon(group, x, y, points)
-  star:setFillColor(1, 1, 1)
+  if style == "filled" then
+    star:setFillColor(1, 1, 1)
+  else 
+    star.strokeWidth = 1 -- change the stroke width to adjust the thickness of the outline
+    star:setStrokeColor(1, 1, 1) -- set the stroke color to white
+    star:setFillColor(0, 0, 0, 0) -- set the fill color to transparent
+  end
 end
 
+function readHighscores()
+  filePath = system.pathForFile("highscores.json", system.DocumentsDirectory)
+  local file = io.open( filePath, "r" )
+  if file then
+      local contents = file:read( "*a" )
+      io.close( file )
+      highscores = json.decode( contents )
+  end
+end

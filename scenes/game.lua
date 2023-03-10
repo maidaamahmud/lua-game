@@ -21,25 +21,20 @@ function scene:create( event )
 
     sceneGroup:insert(keysGroup) 
 
-    songId = event.params.songId
-    songNotes = SONG_NOTES[ songId ]
+    songID = event.params.songID
+    songNotes = SONG_NOTES[ songID ]
 
     level = event.params.level
     if level == 1 then
         tempo = 1600
-        print("level 1")
     elseif level == 2 then
         tempo = 1350
-        print("level 2")
     elseif level == 3 then
         tempo = 1100
-        print("level 3")
     elseif level == 4 then
         tempo = 850
-        print("level 4")
     elseif level == 5 then
         tempo = 600
-        print ("level 5")
     end
      
     display.setDefault( 'background', 0.1 )
@@ -53,7 +48,6 @@ function scene:show( event )
     local phase = event.phase
  
     if ( phase == "will" ) then
-        print(level)
         levelText = display.newText({
             text = "LEVEL " .. level,     
             x = display.contentCenterX,
@@ -64,7 +58,7 @@ function scene:show( event )
         }) 
 
         songTitle = display.newText({
-            text = SONG_NAMES[songId],     
+            text = SONG_NAMES[songID],     
             x = display.contentCenterX,
             y = display.contentCenterY - 115,
             font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
@@ -87,11 +81,11 @@ function scene:show( event )
         local SPACING_BETWEEN_KEYS = 5.5
         local PIANO_WIDTH = (KEY_WIDTH + SPACING_BETWEEN_KEYS) * NUM_OF_KEYS
 
-        local function drawKey (keyId, xPos, yPos)
+        local function drawKey (keyID, xPos, yPos)
             key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 12)
-            key.fill = KEY_COLORS[keyId]
-            key.number = keyId
-            table.insert( keysArray, keyId, key) 
+            key.fill = KEY_COLORS[keyID]
+            key.number = keyID
+            table.insert( keysArray, keyID, key) 
         end
 
         local function drawPiano ()
@@ -191,11 +185,10 @@ function scene:show( event )
  
         function onEndLevel (event) -- takes user to review screen after game over
             local params = event.source.params
-            print("hm", completedLevel)
-            composer.gotoScene( 'scenes.review', { params={ songId = songId, result = params.result, currentLevel = level, nextLevel = params.nextLevel, description = params.description} } ) 
+            composer.gotoScene( 'scenes.review', { params={ songID = songID, result = params.result, currentLevel = level, nextLevel = params.nextLevel, description = params.description} } ) 
         end
 
-        function compareKeys (keyPressed) -- Compares the keyId of key pressed by user with the keyId in the same index ( using keyIndex defined above ) in the songNotes array 
+        function compareKeys (keyPressed) -- Compares the keyID of key pressed by user with the keyID in the same index ( using keyIndex defined above ) in the songNotes array 
             userKeyIndex = userKeyIndex + 1 -- everytime a key is pressed the key index is incremented
             if (userKeyIndex ~= paceKeyIndex and gameInProgress) then
                 delayExit = timer.performWithDelay (500, onEndLevel)
