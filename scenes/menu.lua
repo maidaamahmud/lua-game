@@ -61,8 +61,8 @@ function scene:show( event )
                     drawStar(starsGroup, xPosStar + countStar  * 20, yPos, 9)
                 end
                 if highscores[SONG_NAMES[countSong]] then   
-                    completedLevel = highscores[SONG_NAMES[countSong]]
-                    for countStar = 1, completedLevel do
+                    completedLevels = highscores[SONG_NAMES[countSong]]
+                    for countStar = 1, completedLevels do
                         drawStar(starsGroup, xPosStar + countStar * 20, yPos, 9, "filled")
                     end
                 end

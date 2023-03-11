@@ -6,7 +6,17 @@ local songData = require( "global.songData" )
 
 local scene = composer.newScene()
  
-local KEY_COLORS = {{0.9, 0.2, 0.2}, {1, 0.5, 0}, {1, 0.9, 0.2}, {0.7, 0.9, 0.4}, {0.5, 0.9, 0.9}, {0.3, 0.3, 0.8}, {0.4, 0.2, 0.7}, {1, 0.5, 0.7}}
+local KEY_VALUES = {"B", "C", "D", "E", "F", "G", "A", "B", "C", "D", "E", "F", "G", "A", "B"}
+
+local KEY_COLORS = {
+  ["B"] = {0.9, 0.3, 0.3},
+  ["C"] = {1, 0.6, 0.1},
+  ["D"] = {1, 0.9, 0.2},
+  ["E"] = {0.7, 0.9, 0.4},
+  ["F"] = {0.4, 0.8, 0.8},
+  ["G"] = {0.4, 0.4, 1},
+  ["A"] = {0.5, 0.3, 0.8}
+}
 
 local keysArray = {} -- array to store all the keys created in order 
 
@@ -75,16 +85,26 @@ function scene:show( event )
         }) 
         pressText.alpha = 0
 
-        local KEY_WIDTH = 65
-        local KEY_HEIGHT = 140
-        local NUM_OF_KEYS = 8
-        local SPACING_BETWEEN_KEYS = 5.5
+        local NUM_OF_KEYS = 15
+        local KEY_WIDTH = (display.contentWidth / NUM_OF_KEYS ) - 5
+        local KEY_HEIGHT = display.contentHeight / 2.5
+        local SPACING_BETWEEN_KEYS = 4
         local PIANO_WIDTH = (KEY_WIDTH + SPACING_BETWEEN_KEYS) * NUM_OF_KEYS
 
         local function drawKey (keyID, xPos, yPos)
-            key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 12)
-            key.fill = KEY_COLORS[keyID]
+            key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 3)
+            key.fill = KEY_COLORS[KEY_VALUES[keyID]]
             key.number = keyID
+
+            keyText = display.newText({
+                text = KEY_VALUES[keyID],     
+                x = xPos,
+                y = yPos + KEY_HEIGHT / 3,
+                font = 'fonts/GroupeMedium-8MXgn.otf',
+                fontSize = 13,
+                align = "center",
+            })
+            keyText:setFillColor({0,0,0})
             table.insert( keysArray, keyID, key) 
         end
 

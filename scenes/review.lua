@@ -16,11 +16,11 @@ local function saveHighscore(highscores)
     end
 end
 
-local function updateHighscore(songName, currentLevel)
+local function updateHighscore(songName, completedLevels)
     readHighscores()
-    if (highscores[songName] == nil or currentLevel > highscores[songName]) then
+    if (highscores[songName] == nil or completedLevels > highscores[songName]) then
         -- if highscore for the song does not exist, or if the current score is higher than the stored score, update entry
-        highscores[songName] = currentLevel
+        highscores[songName] = completedLevels
         saveHighscore(highscores)
     end
 end
@@ -38,9 +38,9 @@ function scene:create( event )
     description = params.description
     currentLevel = params.currentLevel
     nextLevel = params.nextLevel
-    completedLevel = nextLevel - 1
+    completedLevels = nextLevel - 1
 
-    updateHighscore(songName, currentLevel)
+    updateHighscore(songName, completedLevels)
 end
 
 function scene:show( event )
@@ -97,11 +97,11 @@ function scene:show( event )
             onRelease = onGameButtonRelease
         })
 
-        if completedLevel then
-            local starWidth = completedLevel * 20
+        if completedLevels then
+            local starWidth = completedLevels * 20
             local xPos = display.contentCenterX - starWidth / 2
             local yPos = display.contentCenterY + 20
-            for count = 1, completedLevel do
+            for count = 1, completedLevels do
                 drawStar(starsGroup, xPos + (count - 0.5) * 20, yPos, 10, "filled")
             end
         end
@@ -109,7 +109,7 @@ function scene:show( event )
         if (result == 'pass') then
             resultText.text = "PASSED"
             resultText:setFillColor( 0.7, 1, 0.6 )
-            if (completedLevel < 5) then
+            if (completedLevels < 5) then
                 gameButton:setLabel("Next Level")
             else 
                 gameButton:setLabel("Play Again")

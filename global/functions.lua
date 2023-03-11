@@ -1,7 +1,7 @@
 local json = require("json")
 
 function drawStar(group, x, y, size, style)
-  -- this function is not my own code, however was slightly modified by me
+  -- this function drawing the actual star using polygons is not my own code, however was modified by me to fit my purpose
   local halfSize = size / 2
   local angle = math.pi / 5
 
@@ -28,6 +28,9 @@ function readHighscores()
   local file = io.open( filePath, "r" )
   if file then
       local contents = file:read( "*a" )
+      if contents == "" then
+        contents = "{}"
+      end
       io.close( file )
       highscores = json.decode( contents )
   end
