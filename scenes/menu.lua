@@ -1,7 +1,9 @@
 local composer = require( "composer" )
--- import SONG_NAMES and SONG_NOTES variables 
+
+-- import SONG_NAMES, SONG_NOTES, and LEVELS variables 
 local songData = require( "global.songData" ) 
 
+-- import drawStar and readHighscores functions
 local globalFuncs = require( "global.functions" ) 
 
 local scene = composer.newScene()
@@ -10,12 +12,13 @@ local songOptionsArray = {}
 
 function scene:create( event )
     local sceneGroup = self.view
+
     starsGroup = display.newGroup()
     sceneGroup:insert(starsGroup) 
 
     display.setDefault( 'background', 0.1 )
 
-    readHighscores() --gives variable highscores (containg highscore for each song)
+    readHighscores() -- declares variable highscores (containg highscore (max level reached) for each song)
 end
  
 function scene:show( event )
@@ -23,6 +26,7 @@ function scene:show( event )
     local phase = event.phase
     
     if ( phase == "will" ) then
+
         title = display.newText({
             text = "MAGIC KEYS",     
             x = display.contentCenterX,
@@ -33,56 +37,61 @@ function scene:show( event )
         }) 
         title:setFillColor( 0.7, 0.5, 1 )
 
-        local function drawOption (id, xPos, yPos)
+        local function drawSongOption (songID, xPos, yPos)
             local songOptionText = display.newText( {  
-                text = "",  
+                text = SONG_NAMES[songID],  
+                x = xPos,
+                y = yPos,
                 font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',   
                 fontSize = 27,
-                align = "center" 
             }) 
-            songOptionText.x = xPos
-            songOptionText.y = yPos
-            songOptionText.anchorX = 0
-            songOptionText.text= SONG_NAMES[id]
-            songOptionText.number = id
-            table.insert(songOptionsArray, id, songOptionText)
+            songOptionText.number = songID
+            songOptionText.anchorX = 0 -- left align text
+            table.insert(songOptionsArray, songID, songOptionText)
         end
 
-        local function drawMenu (xPos, yPos)
+        local function drawSongsMenu (xPos, yPos)
             local SPACING_BETWEEN_OPTIONS = 45
             local xPosText = 100
             local yPos = display.contentCenterY - 60
 
             for countSong = 1, #SONG_NAMES, 1 do
-                drawOption(countSong, xPosText , yPos)
+                drawSongOption(countSong, xPosText , yPos)
+                -- draw stars
                 local starWidth = #LEVELS * 20
-                xPosStar = display.contentWidth - 100 - starWidth
-                for countStar = 1, #LEVELS do
-                    drawStar(starsGroup, xPosStar + countStar  * 20, yPos, 9)
+                local xPosStar = display.contentWidth - 100 - starWidth
+                for countStar = 1, #LEVELS do -- draw outlined stars equal to the total number of levels
+                    -- drawStar(group, x, y, size, style) 
+                    drawStar(starsGroup, xPosStar + countStar  * 20, yPos, 9, "outlined")
                 end
-                if highscores[SONG_NAMES[countSong]] then   
+                if highscores[SONG_NAMES[countSong]] then -- draw filled stars equal to the number of levels completed
                     completedLevels = highscores[SONG_NAMES[countSong]]
                     for countStar = 1, completedLevels do
                         drawStar(starsGroup, xPosStar + countStar * 20, yPos, 9, "filled")
                     end
                 end
+              
                 yPos = yPos + SPACING_BETWEEN_OPTIONS
             end
         end
 
-        drawMenu()
+        drawSongsMenu()
  
     elseif ( phase == "did" ) then
         local function onOptionTouch(event) 
             if event.phase == "began" then 
-                nextLevel = 1
+                -- when song is clicked on, it directs to the game, picking up from the level they were on (highscore level + 1)
+                nextLevel = 1 -- if song does not exist in the highscores, it starts from level 1
                 if highscores[event.target.text] then
-                    nextLevel = highscores[event.target.text] + 1
-                    if highscores[event.target.text] == #LEVELS then
+                    -- if song is in highscores, the next level is highscore level + 1
+                    nextLevel = highscores[event.target.text] + 1 
+                    if highscores[event.target.text] == #LEVELS then 
+                        -- if the highscore level is the final level, the user is instead directed to the levels overview screen
                         composer.gotoScene( 'scenes.levelsOverview', { params = { songID = event.target.number} } )
                         return
                     end
                 end
+                -- user is directed to game, starting on the appropriate level
                 composer.gotoScene( 'scenes.game', { params = { songID = event.target.number, level = nextLevel} } )
             end
         end
@@ -114,6 +123,7 @@ function scene:destroy( event )
         songOption:removeSelf() 
         songOption = nil
     end
+
 end
 
 scene:addEventListener( "create", scene )

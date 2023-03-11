@@ -1,12 +1,15 @@
 local composer = require( "composer" )
 local widget = require( "widget" )
 
-local scene = composer.newScene()
-
+-- import SONG_NAMES, SONG_NOTES, and LEVELS variables 
 local songData = require( "global.songData" ) 
+
+-- import drawStar and readHighscores functions
 local globalFuncs = require( "global.functions" ) 
 
-local widgetsToRemove = {}
+local scene = composer.newScene()
+
+local levelOptionsArray = {}
 
 function scene:create( event )
     local sceneGroup = self.view
@@ -17,8 +20,6 @@ function scene:create( event )
     songID = event.params.songID
 
     readHighscores() --gives variable highscores (containg highscore for each song)
-    
-    local params = event.params
 end
 
 function scene:show( event )
@@ -50,40 +51,29 @@ function scene:show( event )
         })
 
         local function drawLevelOption (level, xPos, yPos)
-            if (level - 1 > highscores[SONG_NAMES[songID]] ) then
-                levelOption = widget.newButton({
-                    parent = levelsGroup,
-                    x = xPos,
-                    y = yPos,
-                    width = 50,
-                    height = 50,
-                    label = level, 
-                    labelAlign = "center",
-                    labelColor = { default={ 0.6, 0.6, 0.6 } }, 
-                    font = 'fonts/GroupeMedium-8MXgn.otf',
-                    fontSize = 30,
-                })
-                print("small", level, highscores[SONG_NAMES[songID]])
+            local levelOption = display.newText({
+                text = level,
+                x = xPos,
+                y = yPos,
+                width = 50,
+                height = 50,
+                align = "center",
+                font = "fonts/GroupeMedium-8MXgn.otf",
+                fontSize = 30
+            })
+            levelOption.number = level
+
+            if level - 1 <= highscores[SONG_NAMES[songID]] then 
+                -- if level is equal to or less than the highscore level + 1 
+                -- (as the user can also play the level after the highest level they have reached) 
+                -- the color of the text is white (symbolizing that is it clickable)
+                levelOption:setFillColor(1, 1, 1)
             else
-                levelOption = widget.newButton({
-                    parent = levelsGroup,
-                    x = xPos,
-                    y = yPos,
-                    width = 50,
-                    height = 50,
-                    label = level, 
-                    labelAlign = "center",
-                    labelColor = { default={ 1, 1, 1 } },
-                    font = 'fonts/GroupeMedium-8MXgn.otf',
-                    fontSize = 30,
-                    onRelease = function() 
-                        composer.gotoScene( 'scenes.game', { params = { songID = songID, level = level} } )
-                    end,
-                })
-                print("big", level, highscores[SONG_NAMES[songID]])
+                -- otherwise the color of the text is light grey (symbolizing that it is not clickable)
+                levelOption:setFillColor(0.6, 0.6, 0.6)
             end
 
-            table.insert( widgetsToRemove, level, levelOption) 
+            table.insert(levelOptionsArray, level, levelOption) 
         end
 
         local function drawLevelsMenu ()
@@ -99,7 +89,19 @@ function scene:show( event )
         drawLevelsMenu()
 
     elseif ( phase == "did" ) then
-    
+    local function onOptionTouch(event) 
+            if event.phase == "began" then 
+                if event.target.number - 1 <= highscores[SONG_NAMES[songID]] then
+                    -- takes user to game for the clicked on level, if level has been unlocked
+                    -- if level has not been unlocked, nothing happens when the level number is clicked
+                    composer.gotoScene( 'scenes.game', { params = { songID = songID, level = event.target.number} } )
+                end
+            end
+        end
+        
+        for level, levelOption in ipairs(levelOptionsArray) do
+            levelOption:addEventListener("touch", onOptionTouch)
+        end
     end
 end
 
@@ -122,9 +124,10 @@ function scene:destroy( event )
 
     toMenuButton:removeSelf()
     toMenuButton = nil
-
-    for level = 1, #widgetsToRemove do
-       display.remove(widgetsToRemove[level])
+    
+    for level, levelOption in ipairs(levelOptionsArray) do
+        levelOption:removeSelf() 
+        levelOption = nil
     end
 
 end
