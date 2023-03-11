@@ -14,12 +14,13 @@ function drawStar(group, x, y, size, style)
   end
 
   local star = display.newPolygon(group, x, y, points)
-  if style == "filled" then
+
+  if style == "filled" then -- draws filled in white stars
     star:setFillColor(1, 1, 1)
-  else 
-    star.strokeWidth = 1 -- change the stroke width to adjust the thickness of the outline
-    star:setStrokeColor(1, 1, 1) -- set the stroke color to white
-    star:setFillColor(0, 0, 0, 0) -- set the fill color to transparent
+  else -- draws outlined stars
+    star.strokeWidth = 1 
+    star:setStrokeColor(1, 1, 1) 
+    star:setFillColor(0, 0, 0, 0) 
   end
 end
 
@@ -28,10 +29,11 @@ function readHighscores()
   local file = io.open( filePath, "r" )
   if file then
       local contents = file:read( "*a" )
-      if contents == "" then
+      if contents == "" then 
+        -- if file is empty, the contents is set to empty object string
         contents = "{}"
       end
       io.close( file )
-      highscores = json.decode( contents )
+      highscores = json.decode( contents ) -- contents are decoded from json 
   end
 end
