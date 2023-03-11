@@ -129,6 +129,7 @@ function scene:show( event )
             key:addEventListener("touch", onKeyTouch) -- add touch event listner to each piano key 
         end
 
+        
         local function onDemoButtonRelease (event) 
             transition.fadeOut( demoButton, { time = 400 } )
             playDemo()

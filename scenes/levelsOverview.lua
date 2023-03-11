@@ -50,7 +50,7 @@ function scene:show( event )
         })
 
         local function drawLevelOption (level, xPos, yPos)
-            if level > highscores[SONG_NAMES[songID]] then
+            if (level - 1 > highscores[SONG_NAMES[songID]] ) then
                 levelOption = widget.newButton({
                     parent = levelsGroup,
                     x = xPos,
@@ -63,6 +63,7 @@ function scene:show( event )
                     font = 'fonts/GroupeMedium-8MXgn.otf',
                     fontSize = 30,
                 })
+                print("small", level, highscores[SONG_NAMES[songID]])
             else
                 levelOption = widget.newButton({
                     parent = levelsGroup,
@@ -79,8 +80,9 @@ function scene:show( event )
                         composer.gotoScene( 'scenes.game', { params = { songID = songID, level = level} } )
                     end,
                 })
+                print("big", level, highscores[SONG_NAMES[songID]])
             end
-            
+
             table.insert( widgetsToRemove, level, levelOption) 
         end
 
@@ -121,8 +123,8 @@ function scene:destroy( event )
     toMenuButton:removeSelf()
     toMenuButton = nil
 
-    for i=#widgetsToRemove, 1, -1 do
-        display.remove(widgetsToRemove[i])
+    for level = 1, #widgetsToRemove do
+       display.remove(widgetsToRemove[level])
     end
 
 end
