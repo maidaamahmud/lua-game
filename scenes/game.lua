@@ -35,17 +35,8 @@ function scene:create( event )
     songNotes = SONG_NOTES[ songID ]
 
     level = event.params.level
-    if level == 1 then
-        tempo = 1600
-    elseif level == 2 then
-        tempo = 1350
-    elseif level == 3 then
-        tempo = 1100
-    elseif level == 4 then
-        tempo = 850
-    elseif level == 5 then
-        tempo = 600
-    end
+
+    tempo = LEVELS[level]["tempo"]
      
     display.setDefault( 'background', 0.1 )
 
@@ -95,8 +86,8 @@ function scene:show( event )
             key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 3)
             key.fill = KEY_COLORS[KEY_VALUES[keyID]]
             key.number = keyID
-
             keyText = display.newText({
+                parent = keysGroup,
                 text = KEY_VALUES[keyID],     
                 x = xPos,
                 y = yPos + KEY_HEIGHT / 3,
@@ -217,7 +208,7 @@ function scene:show( event )
                 delayExit = timer.performWithDelay (500, onEndLevel)
                 delayExit.params = { result = 'fail', description = 'OH NO, YOU PLAYED THE WRONG NOTE', nextLevel = level}
             elseif (userKeyIndex == #songNotes and gameInProgress) then 
-                if level < 5 then
+                if level < #LEVELS then
                     description = 'WELL DONE, NOW LETS MAKE IT FASTER'
                     nextLevel = level + 1
                 else 

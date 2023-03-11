@@ -55,9 +55,9 @@ function scene:show( event )
 
             for countSong = 1, #SONG_NAMES, 1 do
                 drawOption(countSong, xPosText , yPos)
-                local starWidth = 5 * 20
+                local starWidth = #LEVELS * 20
                 xPosStar = display.contentWidth - 100 - starWidth
-                for countStar = 1, 5 do
+                for countStar = 1, #LEVELS do
                     drawStar(starsGroup, xPosStar + countStar  * 20, yPos, 9)
                 end
                 if highscores[SONG_NAMES[countSong]] then   
@@ -77,8 +77,10 @@ function scene:show( event )
             if event.phase == "began" then 
                 nextLevel = 1
                 if highscores[event.target.text] then
-                    if highscores[event.target.text] < 5 then
-                        nextLevel = highscores[event.target.text] + 1
+                    nextLevel = highscores[event.target.text] + 1
+                    if highscores[event.target.text] == #LEVELS then
+                        composer.gotoScene( 'scenes.levelsOverview', { params = { songID = event.target.number} } )
+                        return
                     end
                 end
                 composer.gotoScene( 'scenes.game', { params = { songID = event.target.number, level = nextLevel} } )

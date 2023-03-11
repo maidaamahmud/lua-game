@@ -39,6 +39,9 @@ function scene:create( event )
     currentLevel = params.currentLevel
     nextLevel = params.nextLevel
     completedLevels = nextLevel - 1
+    if currentLevel == #LEVELS then
+        completedLevels = #LEVELS
+    end
 
     updateHighscore(songName, completedLevels)
 end
@@ -48,19 +51,11 @@ function scene:show( event )
     local phase = event.phase
 
     if ( phase == "will" ) then
-
-        local function onMenuButtonRelease () 
-            composer.gotoScene( 'scenes.menu' )
-        end 
-
-        local function onGameButtonRelease () 
-            composer.gotoScene( 'scenes.game', { params = { songID = songID, level = nextLevel} } )
-        end 
-
+        
         resultText = display.newText({
             text = "",     
             x = display.contentCenterX,
-            y = display.contentCenterY - 80,
+            y = 80,
             font =  'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
             fontSize = 55,
             align = "center"
@@ -69,7 +64,7 @@ function scene:show( event )
         descriptionText = display.newText({
             text = description,     
             x = display.contentCenterX,
-            y = display.contentCenterY - 30 , 
+            y = 130 , 
             font = 'fonts/GroupeMedium-8MXgn.otf',
             fontSize = 20,
             align = "center"
@@ -77,30 +72,47 @@ function scene:show( event )
 
         menuButton = widget.newButton({
             x = display.contentCenterX - 100,
-            y = display.contentCenterY + 60,
+            y = display.contentCenterY + 45,
             label = "Go to Menu", 
             labelAlign = "center",
             labelColor = { default={ 1, 1, 1 } },
             font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-            fontSize = 35,
-            onRelease = onMenuButtonRelease
+            fontSize = 32,
+            onRelease = function() 
+                composer.gotoScene( 'scenes.menu' )
+            end
         })
 
         gameButton = widget.newButton({
             x = display.contentCenterX + 100,
-            y = display.contentCenterY + 60,
+            y = display.contentCenterY + 45,
             label = "", 
             labelAlign = "center",
             labelColor = { default={ 1, 1, 1 } },
             font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
-            fontSize = 35,
-            onRelease = onGameButtonRelease
+            fontSize = 32,
+            onRelease = function() 
+                composer.gotoScene( 'scenes.game', { params = { songID = songID, level = nextLevel} } )
+            end
+        })
+
+        viewLevelsButton = widget.newButton({
+            x = display.contentCenterX,
+            y = display.contentCenterY + 100,
+            label = "View All Levels", 
+            labelAlign = "center",
+            labelColor = { default={ 1, 1, 1 } },
+            font = 'fonts/LoveGlitchPersonalUseRegular-vmEyA.ttf',
+            fontSize = 30,
+            onRelease = function() 
+                composer.gotoScene( 'scenes.levelsOverview', { params = { songID = songID} } )
+            end
         })
 
         if completedLevels then
             local starWidth = completedLevels * 20
             local xPos = display.contentCenterX - starWidth / 2
-            local yPos = display.contentCenterY + 20
+            local yPos = 175
             for count = 1, completedLevels do
                 drawStar(starsGroup, xPos + (count - 0.5) * 20, yPos, 10, "filled")
             end
@@ -109,7 +121,7 @@ function scene:show( event )
         if (result == 'pass') then
             resultText.text = "PASSED"
             resultText:setFillColor( 0.7, 1, 0.6 )
-            if (completedLevels < 5) then
+            if (completedLevels < #LEVELS) then
                 gameButton:setLabel("Next Level")
             else 
                 gameButton:setLabel("Play Again")
@@ -120,8 +132,7 @@ function scene:show( event )
             gameButton:setLabel("Try Again")
         end
 
-    elseif ( phase == "did" ) then
-        
+    elseif ( phase == "did" ) then     
     end
 end
 
@@ -145,11 +156,15 @@ function scene:destroy( event )
     gameButton:removeSelf()
     gxameButton = nil
 
+    viewLevelsButton:removeSelf()
+    viewLevelsButton = nil
+
     resultText:removeSelf()
     resultText = nil
 
     descriptionText:removeSelf()
     descriptionText = nil
+
 end
 
 scene:addEventListener( "create", scene )
