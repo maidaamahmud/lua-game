@@ -64,10 +64,12 @@ function scene:show( event )
                     -- drawStar(group, x, y, size, style) 
                     drawStar(starsGroup, xPosStar + countStar  * 20, yPos, 9, "outlined")
                 end
-                if highscores[SONG_NAMES[countSong]] then -- draw filled stars equal to the number of levels completed
-                    completedLevels = highscores[SONG_NAMES[countSong]]
-                    for countStar = 1, completedLevels do
-                        drawStar(starsGroup, xPosStar + countStar * 20, yPos, 9, "filled")
+                if highscores then
+                    if highscores[SONG_NAMES[countSong]] then -- draw filled stars equal to the number of levels completed
+                        completedLevels = highscores[SONG_NAMES[countSong]]
+                        for countStar = 1, completedLevels do
+                            drawStar(starsGroup, xPosStar + countStar * 20, yPos, 9, "filled")
+                        end
                     end
                 end
               
@@ -82,13 +84,15 @@ function scene:show( event )
             if event.phase == "began" then 
                 -- when song is clicked on, it directs to the game, picking up from the level they were on (highscore level + 1)
                 nextLevel = 1 -- if song does not exist in the highscores, it starts from level 1
-                if highscores[event.target.text] then
-                    -- if song is in highscores, the next level is highscore level + 1
-                    nextLevel = highscores[event.target.text] + 1 
-                    if highscores[event.target.text] == #LEVELS then 
-                        -- if the highscore level is the final level, the user is instead directed to the levels overview screen
-                        composer.gotoScene( 'scenes.levelsOverview', { params = { songID = event.target.number} } )
-                        return
+                if highscores then
+                    if highscores[event.target.text] then
+                        -- if song is in highscores, the next level is highscore level + 1
+                        nextLevel = highscores[event.target.text] + 1 
+                        if highscores[event.target.text] == #LEVELS then 
+                            -- if the highscore level is the final level, the user is instead directed to the levels overview screen
+                            composer.gotoScene( 'scenes.levelsOverview', { params = { songID = event.target.number} } )
+                            return
+                        end
                     end
                 end
                 -- user is directed to game, starting on the appropriate level

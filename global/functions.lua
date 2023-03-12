@@ -25,15 +25,19 @@ function drawStar(group, x, y, size, style)
 end
 
 function readHighscores()
-  filePath = system.pathForFile("highscores.json", system.DocumentsDirectory)
-  local file = io.open( filePath, "r" )
-  if file then
-      local contents = file:read( "*a" )
-      if contents == "" then 
-        -- if file is empty, the contents is set to empty object string
-        contents = "{}"
-      end
-      io.close( file )
-      highscores = json.decode( contents ) -- contents are decoded from json 
-  end
+    local filePath = system.pathForFile("highscores.json", system.DocumentsDirectory)
+    local file = io.open(filePath, "r")
+    if file then 
+      local contents = file:read("*a")
+        if contents == "" then
+            -- if file is empty, the contents is set to empty object string
+            contents = "{}"
+        end
+        io.close(file)
+        highscores = json.decode(contents) 
+    else -- if file doesn't exist, create it with an empty object
+        file = io.open(filePath, "w")
+        file:write("{}")
+        io.close(file)
+    end
 end

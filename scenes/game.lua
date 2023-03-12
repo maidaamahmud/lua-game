@@ -99,6 +99,7 @@ function scene:show( event )
             end
         })
 
+
         local function drawKey (keyID, xPos, yPos)
             -- newRoundedRect(parent, x, y, width, height, cornerRadius)
             key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 3)
