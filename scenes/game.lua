@@ -23,11 +23,16 @@ local KEY_COLORS = {
   ["G"] = {0.4, 0.4, 1},
   ["A"] = {0.5, 0.3, 0.8}
 }
+local KEY_NOTES = {} -- to store all the audio files for each key note in order
 local NUM_OF_KEYS = 15
 local KEY_WIDTH = (display.contentWidth / NUM_OF_KEYS ) - 5
 local KEY_HEIGHT = display.contentHeight / 2.5
 local SPACING_BETWEEN_KEYS = 4
 local PIANO_WIDTH = (KEY_WIDTH + SPACING_BETWEEN_KEYS) * NUM_OF_KEYS
+
+for keyID = 1, NUM_OF_KEYS do 
+    KEY_NOTES[keyID] = audio.loadSound("audio/notes/"..keyID..".wav")
+end
 
 -- array to store all the paino keys created in order 
 local keysArray = {} 
@@ -108,7 +113,6 @@ function scene:show( event )
             end
         })
 
-
         local function drawKey (keyID, xPos, yPos)
             -- newRoundedRect(parent, x, y, width, height, cornerRadius)
             key = display.newRoundedRect(keysGroup, xPos, yPos, KEY_WIDTH, KEY_HEIGHT, 3)
@@ -150,9 +154,12 @@ function scene:show( event )
 
         local function onKeyTouch( event ) -- when key is pressed
             if event.phase == "began" then
+                local keyID = event.target.number
                 if gameInProgress then
-                    compareKeys(event.target.number, event.time) 
+                    compareKeys(keyID, event.time) 
                 end
+                local keyAudio = KEY_NOTES[keyID] -- get the corresponding audio file 
+                audio.play(keyAudio) 
                 event.target.alpha = 0.5 -- the color of the key becomes darker once it is pressed
                 -- the key remains slightly darker, and then afterKeyTouch is run <- returns the key to its normal color
                 local effectTimer = timer.performWithDelay( 250, afterKeyTouch ) 
