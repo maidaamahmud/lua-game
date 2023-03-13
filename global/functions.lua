@@ -41,3 +41,26 @@ function readHighscores()
         io.close(file)
     end
 end
+
+function findIndex(array, value)
+  if array then
+    for index, v in ipairs(array) do
+        if v == value then
+            return index
+        end
+    end
+  else
+    return false
+  end
+end
+
+function copyArray(originalArray)
+    local copy = {}
+    for key, value in pairs(originalArray) do
+        if type(value) == "table" then
+            value = copyArray(value)
+        end
+        copy[key] = value
+    end
+    return copy
+end

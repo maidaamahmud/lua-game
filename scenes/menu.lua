@@ -1,6 +1,6 @@
 local composer = require( "composer" )
 
--- import SONG_NAMES, SONG_NOTES, and LEVELS variables 
+-- import SONG_NAMES, and LEVELS variables 
 local songData = require( "global.songData" ) 
 
 -- import drawStar and readHighscores functions

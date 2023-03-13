@@ -1,10 +1,10 @@
 local composer = require( "composer" )
 local widget = require( "widget" )
 
--- import SONG_NAMES, SONG_NOTES, and LEVELS variables 
+-- import SONG_NAMES and LEVELS variables 
 local songData = require( "global.songData" ) 
 
--- import drawStar and readHighscores functions
+-- import readHighscores function
 local globalFuncs = require( "global.functions" ) 
 
 local scene = composer.newScene()

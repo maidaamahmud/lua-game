@@ -2,8 +2,11 @@
 local composer = require( "composer" )
 local widget = require( "widget" )
 
--- import SONG_NAMES, SONG_NOTES, and LEVELS variables 
+-- import SONG_NAMES, SONG_CHORDS, and LEVELS variables 
 local songData = require( "global.songData" ) 
+
+-- import findIndex and copyArray function
+local globalFuncs = require( "global.functions" ) 
 
 local scene = composer.newScene()
 
@@ -29,13 +32,12 @@ local PIANO_WIDTH = (KEY_WIDTH + SPACING_BETWEEN_KEYS) * NUM_OF_KEYS
 -- array to store all the paino keys created in order 
 local keysArray = {} 
 
--- array to store the timings each key was press
-local keyPressTimes = {}
+-- array to store the start and end timings of each key press (to moniter the tempo)
 local keyTimings = {}
--- userKeyIndex and chordIndex are compared to determine if the user is pressing the keys on beat
+
 -- increments after user presses key
 local userKeyIndex = 0
--- incements on each song beat (a key should be pressed on each beat)
+-- incements on each song beat (after every chord)
 local chordIndex = 0 
 
 -- set to true when the user is playing, set to false during demo and when the user is not activley playing
@@ -50,9 +52,11 @@ function scene:create( event )
     songID = event.params.songID
     level = event.params.level
 
-    songNotes = SONG_NOTES[songID]
-
     tempo = LEVELS[level]["tempo"]
+    songType = LEVELS[level]["type"]
+
+    originalSongChords = SONG_CHORDS[songID][songType]
+    songChords = copyArray(originalSongChords) -- copy is used to prevent same version being used when game is reloaded (since this array gets modified)
 
     composer.showOverlay( "scenes.overlay", { isModal = true } ) -- overlay prevents user from interacting with piano keys
 end
@@ -81,7 +85,7 @@ function scene:show( event )
             align = "center"
         }) 
 
-        pressText = display.newText({ -- flashing text informing user when to press the next key
+        pressText = display.newText({ -- flashing text informing user when to press the next keys/key
             x = display.contentCenterX,
             y = display.contentCenterY - 60,
             text = "PRESS",
@@ -147,7 +151,6 @@ function scene:show( event )
         local function onKeyTouch( event ) -- when key is pressed
             if event.phase == "began" then
                 if gameInProgress then
-                    -- table.insert(keyPressTimes, event.time)
                     compareKeys(event.target.number, event.time) 
                 end
                 event.target.alpha = 0.5 -- the color of the key becomes darker once it is pressed
@@ -161,8 +164,8 @@ function scene:show( event )
             key:addEventListener("touch", onKeyTouch) -- add touch event listener to each piano key 
         end
 
-        local function setKeyPressTimings(startTime)
-            for chordIndex, chord in ipairs(songNotes) do
+        local function setKeyTimings(startTime) -- determines the start and end timings a key should be pressed within
+            for chordIndex, chord in ipairs(songChords) do
                 for keyIndex, key in ipairs(chord) do
                 local keyStartTiming = startTime + chordIndex * tempo
                 local keyEndTiming = keyStartTiming + tempo
@@ -173,26 +176,24 @@ function scene:show( event )
 
         local function onSongBeat (onDelayFn) -- runs a callback function on every beat (according to the set tempo)
             delay = 0;
-            for index, chord in ipairs(songNotes) do
+            for index, chord in ipairs(songChords) do
                 delay = delay + tempo 
-                local delayBetweenNotes = timer.performWithDelay( delay, onDelayFn ) 
-                delayBetweenNotes.params = { chord = chord }
+                delayBetweenChords = timer.performWithDelay( delay, onDelayFn ) 
+                delayBetweenChords.params = { chord = chord }
             end
         end
 
         -- imitatePressKey is a function that is only run as a callback inside onSongBeat
         local function imitatePressKey(event) -- imitates touch event without user interaction (for demo)
             local songChord = event.source.params.chord -- from params when run in onSongBeat
-            timer.performWithDelay( 0, function() --FIXME: delay may not be needed
-                for index, key in ipairs(songChord) do
-                    onKeyTouch({phase = "began", name = "touch", target = keysArray[key], time = event.time})
-                end
-            end )
+            for index, key in ipairs(songChord) do
+                onKeyTouch({phase = "began", name = "touch", target = keysArray[key], time = event.time})
+            end   
         end
 
         -- pulsatePressText is a function that is only run as a callback inside onSongBeat
         local function pulsatePressText () -- makes press text appear and then dissapear from screen once
-            chordIndex = chordIndex + 1 -- FIXME: REMOVE everytime the press text appears, the chordIndex is incremented
+            chordIndex = chordIndex + 1 -- chordIndex incremented after every beat (next beat = next chord)
             transition.to(pressText, {time=tempo/3, alpha=1, onComplete=function()
             transition.to(pressText, {time=tempo/3, alpha=0})
             end})
@@ -208,9 +209,8 @@ function scene:show( event )
                 font = 'fonts/GroupeMedium-8MXgn.otf',
                 fontSize = 40,
                 onRelease = function(event) 
-                    setKeyPressTimings(event.time)
+                    setKeyTimings(event.time) -- sets the timings each key should be pressed within (using the time the start button clicked as the start timing)
                     transition.fadeOut( startButton, { time = 400 } )
-                    userKeyIndex = 0 -- sets back to 0 once the demo is over and the game begins 
                     gameInProgress = true 
                     composer.hideOverlay() -- hiding overlay means user can interact with the piano 
                     onSongBeat(pulsatePressText) -- renders the press text to the song beat (tempo)
@@ -219,8 +219,8 @@ function scene:show( event )
         end
 
         function playDemo ()
-            onSongBeat(imitatePressKey) -- presses key to the song beat (tempo)
-            timer.performWithDelay( tempo * #songNotes, createStartButton ) -- after demo ends, runs function to render start button on screen
+            onSongBeat(imitatePressKey) -- presses each chord (keys) to the song beat (tempo)
+            timer.performWithDelay( tempo * #songChords, createStartButton ) -- after demo ends, runs function to render start button on screen
         end
 
  
@@ -239,27 +239,39 @@ function scene:show( event )
         end
 
         function compareKeys(keyPressed, keyPressedTime)
-            userKeyIndex = userKeyIndex + 1 -- FIXME: remove everytime a key is pressed the note index is incremented
-            -- if (chordPressed ~= songNotes[userKeyIndex]) then
-            --     delayExit = timer.performWithDelay(500, onEndLevel)
-            --     delayExit.params = { result = 'fail', description = 'OH NO, YOU PRESSED THE WRONG NOTE', nextLevel = level } 
+            userKeyIndex = userKeyIndex + 1 -- incremented everytime a key is pressed 
+            keyPressedIndex = findIndex(songChords[chordIndex], keyPressed) -- returns index of key within current chord, returns false if nothing found
+    
             if (keyPressedTime < keyTimings[userKeyIndex]["start"] or keyPressedTime >= keyTimings[userKeyIndex]["finish"]) then
+                -- if key is pressed within the time allocated for that key
                 delayExit = timer.performWithDelay(500, onEndLevel)
                 delayExit.params = { result = 'fail', description = 'OH NO, YOU WERE OFF BEAT', nextLevel = level }
+            elseif (not keyPressedIndex) then
+                -- if key pressed does not exist within the array for the current chord
+                delayExit = timer.performWithDelay(500, onEndLevel)
+                delayExit.params = { result = 'fail', description = 'OH NO, YOU PRESSED THE WRONG NOTE', nextLevel = level } 
             elseif (userKeyIndex == #keyTimings) then 
-                -- if game is in progress and the number of keys pressed by user is equal to...
-                -- ...the number of key notes in the song, user passes
-                if level < #LEVELS then -- if all levels have not been completed yet
-                    description = 'WELL DONE, NOW LETS MAKE IT FASTER'
+                -- if the number of keys pressed by user is equal to the number of keys in the song
+                if level < #LEVELS then 
+                    -- if all levels have not been completed yet
+                    if level == 2 then
+                        description = "WELL DONE, NOW TIME TO ADD IN SOME CHORDS"
+                    else
+                        description = 'WELL DONE, NOW LETS MAKE IT FASTER'
+                    end
                     nextLevel = level + 1
-                else -- if all levels have been completed
+                else 
+                    -- if all levels have been completed
                     description = 'YOU COMPLETED ALL THE LEVELS'
                     nextLevel = 1
                 end
                 delayExit = timer.performWithDelay(500, onEndLevel)
                 delayExit.params = { result = 'pass', description = description, nextLevel = nextLevel }
+            else 
+                -- removes the key already pressed from the current chord
+                table.remove(songChords[chordIndex], keyPressedIndex) 
             end
-        
+
         end
     end
 end
@@ -269,7 +281,7 @@ function scene:hide( event )
     local phase = event.phase
  
     if ( phase == "will" ) then
- 
+
     elseif ( phase == "did" ) then
         composer.removeScene( "scenes.game")
     end
@@ -277,6 +289,8 @@ end
  
 function scene:destroy( event )
     local sceneGroup = self.view
+
+    timer.cancel(delayBetweenChords)
 
     songTitle:removeSelf()
     songTitle = nil
