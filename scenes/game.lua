@@ -249,14 +249,14 @@ function scene:show( event )
             userKeyIndex = userKeyIndex + 1 -- incremented everytime a key is pressed 
             keyPressedIndex = findIndex(songChords[chordIndex], keyPressed) -- returns index of key within current chord, returns false if nothing found
     
-            if (keyPressedTime < keyTimings[userKeyIndex]["start"] or keyPressedTime >= keyTimings[userKeyIndex]["finish"]) then
-                -- if key is pressed within the time allocated for that key
-                delayExit = timer.performWithDelay(500, onEndLevel)
-                delayExit.params = { result = 'fail', description = 'OH NO, YOU WERE OFF BEAT', nextLevel = level }
-            elseif (not keyPressedIndex) then
+            if (not keyPressedIndex) then
                 -- if key pressed does not exist within the array for the current chord
                 delayExit = timer.performWithDelay(500, onEndLevel)
                 delayExit.params = { result = 'fail', description = 'OH NO, YOU PRESSED THE WRONG NOTE', nextLevel = level } 
+            elseif (keyPressedTime < keyTimings[userKeyIndex]["start"] or keyPressedTime >= keyTimings[userKeyIndex]["finish"]) then
+                -- if key is pressed within the time allocated for that key
+                delayExit = timer.performWithDelay(500, onEndLevel)
+                delayExit.params = { result = 'fail', description = 'OH NO, YOU WERE OFF BEAT', nextLevel = level }
             elseif (userKeyIndex == #keyTimings) then 
                 -- if the number of keys pressed by user is equal to the number of keys in the song
                 if level < #LEVELS then 
